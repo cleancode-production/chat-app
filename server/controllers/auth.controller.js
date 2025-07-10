@@ -8,15 +8,17 @@ export const loginUser = async (req, res) => {
 
     const user = await User.findOne({ email });
     if (!user) {
-      res.status(401).json({ message: "Ungültige Anmeldedaten" });
-      return;
+      const error = new Error("Ungültige Anmeldedaten");
+      error.statusCode = 401;
+      return next(error);
     }
 
     const isMatch = await bcrypt.compare(password, user.hashedPassword);
 
     if (!isMatch) {
-      res.status(401).json({ message: "Ungültige Anmeldedaten" });
-      return;
+      const error = new Error("Ungültige Anmeldedaten");
+      error.statusCode = 401;
+      return next(error);
     }
 
     const accessToken = jwt.sign(
@@ -49,56 +51,72 @@ export const loginUser = async (req, res) => {
       })
       .status(200)
       .json({ message: "Login erfolgreich" });
-  } catch (err) {
-    console.error("Login Fehler:", err);
-    res.status(500).json({ message: "Serverfehler beim Login" });
+
+  } catch (error) {
+    return next(error);
   }
 };
 
-export const registerUser = async (req, res) => {
+export const registerUser = async (req, res, next) => {
   try {
-    const { email, password } = req.body;
+    const { email, password, username } = req.body;
 
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
-      res.status(400).json({ message: "Benutzer existiert bereits" });
-      return;
+    const existingEmail = await User.findOne({ email });
+    if (existingEmail) {
+      const error = new Error("Email bereits verwendet");
+      error.statusCode = 400;
+      return next(error);
+    }
+
+    const existingUsername = await User.findOne({ username });
+    if (existingUsername) {
+      const error = new Error("Benutzername bereits verwendet");
+      error.statusCode = 400;
+      return next(error);
     }
 
     const saltRounds = 12;
-    const passwordHash = await bcrypt.hash(password, saltRounds);
+    const hashedPassword = await bcrypt.hash(password, saltRounds);
 
     // 3. User erstellen
-    const newUser = new User({ email, passwordHash });
+    const newUser = new User({ email, hashedPassword, username });
     await newUser.save();
 
-    res.status(201).json({ message: "Benutzer erfolgreich registriert" });
-  } catch (err) {
-    console.error("Registrierungsfehler:", err);
-    res.status(500).json({ message: "Serverfehler bei Registrierung" });
+    return res.status(201).json({ 
+      message: "Benutzer erfolgreich registriert" 
+    });
+
+  } catch (error) {
+    return next(error)
   }
 };
 
-export const refreshAccessToken = async (req, res) => {
+export const refreshAccessToken = async (req, res, next) => {
   try {
     const token = req.cookies.refreshToken;
-    if (!token) return res.status(401).json({ message: "Kein Refresh Token" });
+    if (!token) {
+      const error = new Error("Kein Refresh Token");
+      error.statusCode = 401;
+      return next(error);
+    };
 
     // Token prüfen
     jwt.verify(
       token,
       process.env.REFRESH_TOKEN_SECRET,
-      async (err, decoded) => {
-        if (err) {
-          res.status(403).json({ message: "Ungültiger Refresh Token" });
-          return;
-        }
+      async (error, decoded, next) => {
+        if (error) {
+          const error = new Error("Ungültiger Refresh Token");
+          error.statusCode = 403;
+          return next(error);
+        };
 
         const user = await User.findById(decoded.userId);
         if (!user || user.refreshToken !== token) {
-          res.status(403).json({ message: "Token gehört zu keinem Benutzer" });
-          return;
-        }
+          const error = new Error("Token gehört zu keinem Benutzer");
+          error.statusCode = 403;
+          return next(error);
+        };
 
         // Neuen Access Token erstellen
         const newAccessToken = jwt.sign(
@@ -115,16 +133,18 @@ export const refreshAccessToken = async (req, res) => {
           maxAge: 15 * 60 * 1000,
         });
 
-        res.status(200).json({ message: "Neuer Access Token gesetzt" });
+        return res.status(200).json({ 
+          message: "Neuer Access Token gesetzt" 
+        });
       }
     );
-  } catch (err) {
-    console.error("Refresh Fehler:", err);
-    res.status(500).json({ message: "Fehler beim Refresh Token" });
+
+  } catch (error) {
+    return next(error);
   }
 };
 
-export const logoutUser = async (req, res) => {
+export const logoutUser = async (req, res, next) => {
   try {
     const refreshToken = req.cookies.refreshToken;
     if (!refreshToken) {
@@ -150,10 +170,11 @@ export const logoutUser = async (req, res) => {
       })
       .status(200)
       .json({ message: "Logout erfolgreich" });
+
     user.isOnline = false;
+
   } catch (error) {
-    console.error("Logout Fehler:", err);
-    res.status(500).json({ message: "Fehler beim Logout" });
+    return next(error)
   }
 };
 
@@ -164,13 +185,14 @@ export const getMe = async (req, res) => {
     const user = await User.findById(userId).select("email");
 
     if (!user) {
-      res.status(404).json({ message: "User nicht gefunden" });
-      return;
+      const error = new Error("User nicht gefunden");
+      error.statusCode = 404;
+      return next(error);
     }
 
-    res.status(200).json({ user });
+    return res.status(200).json({ user });
+
   } catch (error) {
-    console.error("Fehler in /me:", error);
-    res.status(500).json({ message: "Serverfehler" });
+    return next(error)
   }
 };

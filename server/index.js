@@ -5,6 +5,7 @@ import http from "http";
 import cookieParser from "cookie-parser";
 import authRoutes from "./routes/auth.routes.js";
 import db from "./lib/db.js";
+import errorHandler from "./middleware/errorhandler.js";
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -42,6 +43,8 @@ io.on("connection", (socket) => {
     console.log("Client disconnected:", socket.id);
   });
 });
+
+app.use(errorHandler);
 
 server.listen(PORT, () => {
   console.log(`Server läuft mit Socket.io auf http://localhost:${PORT}`);

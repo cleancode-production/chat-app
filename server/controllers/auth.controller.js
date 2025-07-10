@@ -1,6 +1,7 @@
 import User from "../models/userModel.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
+import { date } from "../lib/date.js"
 
 export const loginUser = async (req, res) => {
   try {
@@ -78,8 +79,17 @@ export const registerUser = async (req, res, next) => {
     const saltRounds = 12;
     const hashedPassword = await bcrypt.hash(password, saltRounds);
 
+    const createdAt = date()
+    const lastChange = date()
+
     // 3. User erstellen
-    const newUser = new User({ email, hashedPassword, username });
+    const newUser = new User({ 
+      email, 
+      hashedPassword, 
+      username,
+      createdAt,
+      lastChange
+    });
     await newUser.save();
 
     return res.status(201).json({ 

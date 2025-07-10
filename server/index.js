@@ -4,9 +4,12 @@ import { Server } from "socket.io";
 import http from "http";
 import cookieParser from "cookie-parser";
 import authRoutes from "./routes/auth.routes.js";
+import db from "./lib/db.js";
 
 const app = express();
 const PORT = process.env.PORT || 5000;
+
+db.connect();
 
 app.use(cors());
 app.use(express.json());

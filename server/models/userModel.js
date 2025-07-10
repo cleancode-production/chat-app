@@ -5,6 +5,7 @@ const userSchema = new mongoose.Schema({
     hashedPassword: { type: String, required: true },
     username: { type: String, unique: true, required: true },
     imgUrl: { type: String },
+    refreshToken: { type: String },
     createdAt: { type: String },
     lastChange: { type: String }
 });

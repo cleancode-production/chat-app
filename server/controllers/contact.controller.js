@@ -1,49 +1,59 @@
 import User from "../models/userModel.js";
 
-export const getAllContacts = async (req, res) => {
+// Alle Kontakte holen
+export const getAllContacts = async (req, res, next) => {
   const userId = req.userId;
   try {
     const user = await User.findById(userId).populate("contacts", "email _id");
 
     if (!user) {
-      res.status(404).json({ message: "User not found" });
-      return;
+      const error = new Error("Benutzer nicht gefunden");
+      error.statusCode = 404;
+      return next(error);
     }
 
     res.status(200).json(user.contacts);
-  } catch (err) {
-    console.error("Fehler beim Laden der Kontakte:", err);
-    res.status(500).json({ message: "Serverfehler" });
+  } catch (error) {
+    return next(error);
   }
 };
 
-export const addContact = async (req, res) => {
+// Kontakt hinzufügen
+export const addContact = async (req, res, next) => {
   try {
     const { email } = req.body;
     const userId = req.userId;
 
+    if (!email) {
+      const error = new Error("E-Mail ist erforderlich");
+      error.statusCode = 400;
+      return next(error);
+    }
+
     const contact = await User.findOne({ email });
     if (!contact) {
-      res.status(404).json({ message: "Kontakt nicht gefunden" });
-      return;
+      const error = new Error("Kontakt nicht gefunden");
+      error.statusCode = 404;
+      return next(error);
     }
 
     if (userId === contact._id.toString()) {
-      res
-        .status(400)
-        .json({ message: "Du kannst dich nicht selbst hinzufügen." });
-      return;
+      const error = new Error("Du kannst dich nicht selbst hinzufügen.");
+      error.statusCode = 400;
+      return next(error);
     }
 
     const user = await User.findById(userId);
     if (!user) {
-      res.status(404).json({ message: "Benutzer nicht gefunden" });
-      return;
+      const error = new Error("Benutzer nicht gefunden");
+      error.statusCode = 404;
+      return next(error);
     }
 
     if (user.contacts.includes(contact._id)) {
-      res.status(400).json({ message: "Kontakt ist bereits vorhanden" });
-      return;
+      const error = new Error("Kontakt ist bereits vorhanden");
+      error.statusCode = 400;
+      return next(error);
     }
 
     user.contacts.push(contact._id);
@@ -52,32 +62,34 @@ export const addContact = async (req, res) => {
     res.status(200).json({ message: "Kontakt hinzugefügt" });
     return;
   } catch (err) {
-    console.error("Fehler beim Hinzufügen des Kontakts:", err);
-    res.status(500).json({ message: "Serverfehler" });
-    return;
+    return next(err);
   }
 };
 
-export const removeContact = async (req, res) => {
+// Kontakt entfernen
+export const removeContact = async (req, res, next) => {
   try {
     const { contactId } = req.body;
     const userId = req.userId;
 
     if (!contactId) {
-      res.status(400).json({ message: "contactId ist erforderlich" });
-      return;
+      const error = new Error("contactId ist erforderlich");
+      error.statusCode = 400;
+      return next(error);
     }
 
     const user = await User.findById(userId);
     if (!user) {
-      res.status(404).json({ message: "Benutzer nicht gefunden" });
-      return;
+      const error = new Error("Benutzer nicht gefunden");
+      error.statusCode = 404;
+      return next(error);
     }
 
     const index = user.contacts.indexOf(contactId);
     if (index === -1) {
-      res.status(400).json({ message: "Kontakt ist nicht in deiner Liste" });
-      return;
+      const error = new Error("Kontakt ist nicht in deiner Liste");
+      error.statusCode = 400;
+      return next(error);
     }
 
     user.contacts.splice(index, 1);
@@ -86,8 +98,6 @@ export const removeContact = async (req, res) => {
     res.status(200).json({ message: "Kontakt entfernt" });
     return;
   } catch (err) {
-    console.error("Fehler beim Entfernen des Kontakts:", err);
-    res.status(500).json({ message: "Serverfehler" });
-    return;
+    return next(err);
   }
 };

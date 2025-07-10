@@ -7,13 +7,17 @@ export const loginUser = async (req, res) => {
     const { email, password } = req.body;
 
     const user = await User.findOne({ email });
-    if (!user)
-      return res.status(401).json({ message: "Ungültige Anmeldedaten" });
+    if (!user) {
+      res.status(401).json({ message: "Ungültige Anmeldedaten" });
+      return;
+    }
 
     const isMatch = await bcrypt.compare(password, user.hashedPassword);
 
-    if (!isMatch)
-      return res.status(401).json({ message: "Ungültige Anmeldedaten" });
+    if (!isMatch) {
+      res.status(401).json({ message: "Ungültige Anmeldedaten" });
+      return;
+    }
 
     const accessToken = jwt.sign(
       { userId: user._id },
@@ -57,7 +61,8 @@ export const registerUser = async (req, res) => {
 
     const existingUser = await User.findOne({ email });
     if (existingUser) {
-      return res.status(400).json({ message: "Benutzer existiert bereits" });
+      res.status(400).json({ message: "Benutzer existiert bereits" });
+      return;
     }
 
     const saltRounds = 12;
@@ -71,5 +76,52 @@ export const registerUser = async (req, res) => {
   } catch (err) {
     console.error("Registrierungsfehler:", err);
     res.status(500).json({ message: "Serverfehler bei Registrierung" });
+  }
+};
+
+import jwt from "jsonwebtoken";
+
+export const refreshAccessToken = async (req, res) => {
+  try {
+    const token = req.cookies.refreshToken;
+    if (!token) return res.status(401).json({ message: "Kein Refresh Token" });
+
+    // Token prüfen
+    jwt.verify(
+      token,
+      process.env.REFRESH_TOKEN_SECRET,
+      async (err, decoded) => {
+        if (err) {
+          res.status(403).json({ message: "Ungültiger Refresh Token" });
+          return;
+        }
+
+        const user = await User.findById(decoded.userId);
+        if (!user || user.refreshToken !== token) {
+          res.status(403).json({ message: "Token gehört zu keinem Benutzer" });
+          return;
+        }
+
+        // Neuen Access Token erstellen
+        const newAccessToken = jwt.sign(
+          { userId: user._id },
+          process.env.ACCESS_TOKEN_SECRET,
+          { expiresIn: "15m" }
+        );
+
+        // Cookie setzen
+        res.cookie("accessToken", newAccessToken, {
+          httpOnly: true,
+          sameSite: "Strict",
+          secure: false,
+          maxAge: 15 * 60 * 1000,
+        });
+
+        res.status(200).json({ message: "Neuer Access Token gesetzt" });
+      }
+    );
+  } catch (err) {
+    console.error("Refresh Fehler:", err);
+    res.status(500).json({ message: "Fehler beim Refresh Token" });
   }
 };

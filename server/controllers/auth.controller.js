@@ -79,8 +79,6 @@ export const registerUser = async (req, res) => {
   }
 };
 
-import jwt from "jsonwebtoken";
-
 export const refreshAccessToken = async (req, res) => {
   try {
     const token = req.cookies.refreshToken;

@@ -125,3 +125,35 @@ export const refreshAccessToken = async (req, res) => {
     res.status(500).json({ message: "Fehler beim Refresh Token" });
   }
 };
+
+export const logoutUser = async (req, res) => {
+  try {
+    const refreshToken = req.cookies.refreshToken;
+    if (!refreshToken) {
+      res.sendStatus(204);
+    }
+
+    const user = await User.findOne({ refreshToken });
+    if (user) {
+      user.refreshToken = null;
+      await user.save();
+    }
+
+    res
+      .clearCookie("accessToken", {
+        httpOnly: true,
+        sameSite: "Strict",
+        secure: false, // in Produktion: true
+      })
+      .clearCookie("refreshToken", {
+        httpOnly: true,
+        sameSite: "Strict",
+        secure: false,
+      })
+      .status(200)
+      .json({ message: "Logout erfolgreich" });
+  } catch (error) {
+    console.error("Logout Fehler:", err);
+    res.status(500).json({ message: "Fehler beim Logout" });
+  }
+};

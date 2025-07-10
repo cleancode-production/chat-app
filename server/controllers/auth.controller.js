@@ -32,7 +32,7 @@ export const loginUser = async (req, res) => {
       process.env.REFRESH_TOKEN_SECRET,
       { expiresIn: "7d" }
     );
-
+    user.isOnline = true;
     user.refreshToken = refreshToken;
     await user.save();
 
@@ -170,6 +170,8 @@ export const logoutUser = async (req, res, next) => {
       })
       .status(200)
       .json({ message: "Logout erfolgreich" });
+
+    user.isOnline = false;
 
   } catch (error) {
     return next(error)

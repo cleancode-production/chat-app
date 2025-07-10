@@ -6,18 +6,15 @@ export const loginUser = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    // 1. User finden
     const user = await User.findOne({ email });
     if (!user)
       return res.status(401).json({ message: "Ungültige Anmeldedaten" });
 
-    // 2. Passwort prüfen
     const isMatch = await bcrypt.compare(password, user.hashedPassword);
 
     if (!isMatch)
       return res.status(401).json({ message: "Ungültige Anmeldedaten" });
 
-    // 3. Tokens erzeugen
     const accessToken = jwt.sign(
       { userId: user._id },
       process.env.ACCESS_TOKEN_SECRET,
@@ -30,11 +27,9 @@ export const loginUser = async (req, res) => {
       { expiresIn: "7d" }
     );
 
-    // 4. RefreshToken speichern
     user.refreshToken = refreshToken;
     await user.save();
 
-    // 5. Cookies setzen
     res
       .cookie("accessToken", accessToken, {
         httpOnly: true,
@@ -53,5 +48,28 @@ export const loginUser = async (req, res) => {
   } catch (err) {
     console.error("Login Fehler:", err);
     res.status(500).json({ message: "Serverfehler beim Login" });
+  }
+};
+
+export const registerUser = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({ message: "Benutzer existiert bereits" });
+    }
+
+    const saltRounds = 12;
+    const passwordHash = await bcrypt.hash(password, saltRounds);
+
+    // 3. User erstellen
+    const newUser = new User({ email, passwordHash });
+    await newUser.save();
+
+    res.status(201).json({ message: "Benutzer erfolgreich registriert" });
+  } catch (err) {
+    console.error("Registrierungsfehler:", err);
+    res.status(500).json({ message: "Serverfehler bei Registrierung" });
   }
 };

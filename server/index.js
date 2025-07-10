@@ -8,7 +8,7 @@ import db from "./lib/db.js";
 
 import errorHandler from "./middleware/errorhandler.js";
 
-import userRoutes from "./routes/contact.routes.js";
+import contactRoutes from "./routes/contact.routes.js";
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -20,7 +20,7 @@ app.use(express.json());
 app.use(cookieParser());
 
 app.use("/api/auth", authRoutes);
-app.use("/api/contact", userRoutes);
+app.use("/api/contact", contactRoutes);
 
 app.get("/", (req, res) => {
   res.send("Hello from server");

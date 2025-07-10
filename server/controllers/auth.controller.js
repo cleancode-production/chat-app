@@ -30,7 +30,7 @@ export const loginUser = async (req, res) => {
       process.env.REFRESH_TOKEN_SECRET,
       { expiresIn: "7d" }
     );
-
+    user.isOnline = true;
     user.refreshToken = refreshToken;
     await user.save();
 
@@ -150,6 +150,7 @@ export const logoutUser = async (req, res) => {
       })
       .status(200)
       .json({ message: "Logout erfolgreich" });
+    user.isOnline = false;
   } catch (error) {
     console.error("Logout Fehler:", err);
     res.status(500).json({ message: "Fehler beim Logout" });

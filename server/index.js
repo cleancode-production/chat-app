@@ -35,6 +35,6 @@ io.on("connection", (socket) => {
   });
 });
 
-app.listen(PORT, () => {
-  console.log(`Server läuft auf http://localhost:${PORT}`);
+server.listen(PORT, () => {
+  console.log(`Server läuft mit Socket.io auf http://localhost:${PORT}`);
 });

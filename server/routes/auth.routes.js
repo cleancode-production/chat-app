@@ -7,7 +7,6 @@ import {
   getMe,
 } from "../controllers/auth.controller.js";
 import { verifyToken } from "../middleware/verifyToken.js";
-import User from "../models/userModel.js";
 
 const router = express.Router();
 

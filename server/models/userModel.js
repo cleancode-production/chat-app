@@ -7,6 +7,7 @@ const userSchema = new mongoose.Schema({
     imgUrl: { type: String },
     refreshToken: { type: String },
     contacts: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+    rooms: [{ type: mongoose.Schema.Types.ObjectId, ref: "Room" }],
     createdAt: { type: String },
     lastChange: { type: String }
 });

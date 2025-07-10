@@ -76,10 +76,10 @@ export const registerUser = async (req, res, next) => {
     }
 
     const saltRounds = 12;
-    const passwordHash = await bcrypt.hash(password, saltRounds);
+    const hashedPassword = await bcrypt.hash(password, saltRounds);
 
     // 3. User erstellen
-    const newUser = new User({ email, passwordHash });
+    const newUser = new User({ email, hashedPassword, username });
     await newUser.save();
 
     return res.status(201).json({ 
@@ -189,7 +189,7 @@ export const getMe = async (req, res) => {
     }
 
     return res.status(200).json({ user });
-    
+
   } catch (error) {
     return next(error)
   }

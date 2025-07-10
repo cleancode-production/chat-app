@@ -1,4 +1,4 @@
-import User from "../models/User.js";
+import User from "../models/userModel.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 
@@ -153,5 +153,23 @@ export const logoutUser = async (req, res) => {
   } catch (error) {
     console.error("Logout Fehler:", err);
     res.status(500).json({ message: "Fehler beim Logout" });
+  }
+};
+
+export const getMe = async (req, res) => {
+  const userId = req.userId;
+
+  try {
+    const user = await User.findById(userId).select("email");
+
+    if (!user) {
+      res.status(404).json({ message: "User nicht gefunden" });
+      return;
+    }
+
+    res.status(200).json({ user });
+  } catch (error) {
+    console.error("Fehler in /me:", error);
+    res.status(500).json({ message: "Serverfehler" });
   }
 };

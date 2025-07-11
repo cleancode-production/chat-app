@@ -7,24 +7,30 @@ import authRoutes from "./routes/auth.routes.js";
 import db from "./lib/db.js";
 
 import errorHandler from "./middleware/errorhandler.js";
-
+import roomRoutes from "./routes/room.routes.js";
 import contactRoutes from "./routes/contact.routes.js";
+import messagesRoutes from "./routes/messages.routes.js";
+
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 
 db.connect();
 
-app.use(cors({
+app.use(
+  cors({
     origin: ["http://localhost:3000", "*"],
     credentials: true,
-  }));
-  
+  })
+);
+
 app.use(express.json());
 app.use(cookieParser());
 
 app.use("/api/auth", authRoutes);
 app.use("/api/contact", contactRoutes);
+app.use("/api/rooms", roomRoutes);
+app.use("/api/messages", messagesRoutes)
 
 app.get("/", (req, res) => {
   res.send("Hello from server");

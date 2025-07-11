@@ -3,7 +3,51 @@ POST http://localhost:5000/api/auth/register HTTP/1.1
 Content-Type: application/json
 
 {
-   "email":"test@email.com",
+   "email":"test3@email.com",
    "password":"abcdefg" ,
-   "username":"testUser"
+   "username":"testUser3"
+}
+###
+POST http://localhost:5000/api/auth/login HTTP/1.1
+Content-Type: application/json
+
+{
+   "email":"test3@email.com",
+   "password":"abcdefg" 
+
+}
+
+
+###
+POST http://localhost:5000/api/rooms HTTP/1.1
+Content-Type: application/json
+
+{
+   
+   "contactId": "686fbf443026631c68a1dd28"
+ 
+}
+
+###
+POST http://localhost:5000/api/rooms/addContact HTTP/1.1
+Content-Type: application/json
+
+{
+   
+   "contactId": "6871145fd5f5b4aff830518a",
+ "roomId": "68711443d5f5b4aff8305181"
+}
+
+###
+GET http://localhost:5000/api/rooms/68711443d5f5b4aff8305181 HTTP/1.1
+Content-Type: application/json
+
+###
+POST http://localhost:5000/api/messages HTTP/1.1
+Content-Type: application/json
+
+{
+   
+   "text": "Das ist meine erste Nachricht",
+ "roomId": "68711443d5f5b4aff8305181"
 }
